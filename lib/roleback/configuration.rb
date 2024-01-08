@@ -1,7 +1,19 @@
 module Roleback
-	def self.configure(options = {}, &block)
+	def self.define(options = {}, &block)
 		@config = ::Roleback::Builder.new(options, &block).build if block_given?
 		@config.construct!
+
+		# is there a ::User class defined?
+		if options[:user_class]
+			@user_class = options[:user_class]
+		elsif defined?(::User)
+			@user_class = ::User
+		else
+			@user_class = nil
+		end
+
+		# extend the user class
+		::Roleback::UserExtension.extend!(@user_class) if @user_class
 
 		@config
 	end
@@ -10,12 +22,35 @@ module Roleback
 		@config || (raise ::Roleback::NotConfiguredError)
 	end
 
+	def self.any
+		::Roleback::ANY
+	end
+
+	def self.allow
+		::Roleback::ALLOW
+	end
+
+	def self.deny
+		::Roleback::DENY
+	end
+
 	class Configuration
 		attr_reader :roles
 
 		def initialize(options = {})
 			@options = options
 			@roles = {}
+		end
+
+		def find_role!(name)
+			role = self.roles[name]
+			raise ::Roleback::MissingRole, "Role #{name} not found" unless role
+			role
+		end
+
+		def can?(role_name, scope: ::Roleback::ANY, resource: ::Roleback::ANY, action: ::Roleback::ANY)
+			role = self.find_role!(role_name)
+			role.can?(scope: scope, resource: resource, action: action)
 		end
 
 		def construct!

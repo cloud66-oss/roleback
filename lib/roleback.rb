@@ -7,4 +7,6 @@ module Roleback
 	class NotConfiguredError < StandardError; end
 	class BadConfiguration < StandardError; end
 	class BadMatch < StandardError; end
+	class InvalidOrMisconfiguredUserClass < StandardError; end
+	class MissingRole < StandardError; end
 end

@@ -90,18 +90,9 @@ RSpec.describe Roleback::RuleBook do
 			rule3 = ::Roleback::Rule.new(role: role, resource: resource, scope: scope2, action: :show, outcome: ::Roleback::ALLOW)
 			rule_book.add(rule3)
 
-			expect{
-				rule_book.match_all(resource: ::Roleback::ANY, scope: ::Roleback::ANY, action: :show)
-			}.to raise_error(::Roleback::BadMatch)
-
-			expect{
-				rule_book.match_all(resource: resource, scope: ::Roleback::ANY, action: :show)
-			}.to raise_error(::Roleback::BadMatch)
-
-			expect{
-				rule_book.match_all(resource: ::Roleback::ANY, scope: scope1, action: :show)
-			}.to raise_error(::Roleback::BadMatch)
-
+			expect(rule_book.match_all(resource: Roleback::any, scope: Roleback::any, action: :show)).to eq([rule1, rule3])
+			expect(rule_book.match_all(resource: resource, scope: Roleback::any, action: :show)).to eq([rule1, rule3])
+			expect(rule_book.match_all(resource: Roleback::any, scope: scope1, action: :show)).to eq([rule1])
 			expect(rule_book.match_all(resource: resource, scope: scope1, action: :show)).to eq([rule1])
 			expect(rule_book.match_all(resource: resource, scope: scope1, action: :index)).to eq([rule2])
 		end
@@ -171,15 +162,14 @@ RSpec.describe Roleback::RuleBook do
 			expect(rule_book.can?(resource: resource, scope: scope, action: :show)).to eq(true)
 
 			# any question
-			expect {
-				rule_book.can?(resource: ::Roleback::ANY, scope: ::Roleback::ANY, action: :show)
-			}.to raise_error(::Roleback::BadMatch)
+			expect(rule_book.can?(resource: ::Roleback::ANY, scope: ::Roleback::ANY, action: :show)).to eq(true)
+
 		end
 	end
 
 	describe '#sort' do
 		it 'sorts rules based on the rules numerical values and outcome' do
-			Roleback.configure do |config|
+			Roleback.define do |config|
 				role :admin do
 					resource :users do
 						can :work

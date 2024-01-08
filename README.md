@@ -1,8 +1,6 @@
 # Roleback
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/roleback`. To experiment with that code, run `bin/console` for an interactive prompt.
-
-TODO: Delete this and the text above, and describe your gem
+Roleback is a simple DSL for writing static RBAC rules for your application. Roleback is not concerned with how you store or enforce your roles, it only cares about how you define them. Storing roles against a user class is easy enough, and there are plenty of gems out there to help you enforce them, like [Pundit](https://github.com/varvet/pundit) and [CanCanCan](https://github.com/CanCanCommunity/cancancan).
 
 ## Installation
 
@@ -14,22 +12,142 @@ gem 'roleback'
 
 And then execute:
 
-    $ bundle
+```bash
+$ bundle
+```
 
 Or install it yourself as:
 
-    $ gem install roleback
+```bash
+$ gem install roleback
+```
 
 ## Usage
 
-TODO: Write usage instructions here
+Using Roleback is simple. Define your roles in a ruby file, and then load them into your application. For example in Rails, you can create a file loaded during your application load, like `config/initializers/roles.rb`:
 
-## Development
+```ruby
+# config/initializers/roles.rb
+Roleback.define do
+  role :admin do
+    can :manage
+  end
+end
+```
 
-After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
+Roleback defines permissions on by roles. In the example above, we've defined a role called `admin` that can `manage` anything. Usually permissions are defined with three pieces of information: `scope`, `resource` and `action`.
 
-To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and tags, and push the `.gem` file to [rubygems.org](https://rubygems.org).
+`resource` is the object you want to check permissions against. `action` is the action you want to check permissions for. For example, you might want to check `read` action, on a blog `post`:
+
+```ruby
+# config/initializers/roles.rb
+Roleback.define do
+  role :admin do
+    resource :post do
+      can :read
+    end
+  end
+end
+```
+
+`resource` however, always includes 7 more actions: `create`, `read`, `update`, `delete`, `list`, `edit` and `new` to make it easier to define permissions for common actions. You can change this behavior using the `only` and `except` options:
+
+```ruby
+# config/initializers/roles.rb
+Roleback.define do
+  role :admin do
+    resource :post, only: [:read, :create, :update, :delete] do
+      can :read
+    end
+  end
+end
+```
+
+`scope` adds context to your permissions. For example, you might want to grant `read` on a `post` in the web, but not in other contexts (like an API):
+
+```ruby
+# config/initializers/roles.rb
+Roleback.define do
+  role :admin do
+    scope :web do
+      resource :post do
+        can :read
+      end
+    end
+  end
+end
+```
+
+## Grant and Deny
+Permissions are granted using `can` and denied using `cannot`:
+
+```ruby
+# config/initializers/roles.rb
+Roleback.define do
+  role :admin do
+    scope :web do
+      resource :post do
+        can :read
+        cannot :write
+      end
+    end
+  end
+end
+```
+
+By default, all `resource` default permissions (create, read, update, delete, list, edit and new) are granted (ie `can`).
+
+## Inheritance
+Roles can inherit from other roles:
+
+```ruby
+# config/initializers/roles.rb
+Roleback.define do
+  role :admin do
+    can :manage
+  end
+
+  role :editor, parent: :admin do
+    cannot :delete
+  end
+end
+```
+
+## Checking Permissions
+Roleback doesn't care how you check permissions, but it does provide a simple API for doing so:
+
+```ruby
+Roleback.can?(:admin, resource: :post, action: :read) # => true
+Roleback.can?(:editor, resource: :post, :delete) # => false
+```
+
+### `User` class
+If you have a `User` class, Roleback will automatically, add a `can?` method to it:
+
+```ruby
+user = User.find(1)
+user.can?(:admin, resource: :post, action: :read) # => true
+user.can?(:editor, resource: :post, :delete) # => false
+```
+
+Your `User` class has to have a method called `roles` that returns an array of role names as symbols.
+
+You can change the class to be extended from `User`, using `user_class` option in `define`:
+
+```ruby
+Roleback.define(user_class: Admin) do
+  # ...
+end
+```
+
+If you don't want to extend your `User` class, pass in `nil` as the `user_class` option:
+
+```ruby
+Roleback.define(user_class: nil) do
+  # ...
+end
+```
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/roleback.
+Bug reports and pull requests are welcome on this GitHub repository. PRs are welcome and more likely to be accepted if they include tests.

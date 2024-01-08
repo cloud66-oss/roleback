@@ -23,9 +23,6 @@ module Roleback
 		end
 
 		def match(resource:, scope:, action:)
-			# you cannot match a rule with ANY
-			raise ::Roleback::BadMatch, "Cannot match a rule with ANY" if resource == ::Roleback::ANY || scope == ::Roleback::ANY
-
 			if @resource.match(resource) && @scope.match(scope)
 				if @action == ::Roleback::ANY || @action == action
 					return self

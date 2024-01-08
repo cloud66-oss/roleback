@@ -6,12 +6,12 @@ RSpec.describe Roleback::Configuration do
 	end
 
     it "has a configuration" do
-        Roleback.configure do |config|
+        Roleback.define do |config|
         end
     end
 
 	it "has a role within configuration" do
-		Roleback.configure do |config|
+		Roleback.define do |config|
 			role :admin do
 			end
 
@@ -25,7 +25,7 @@ RSpec.describe Roleback::Configuration do
 
 	it "stops duplicate roles" do
 		expect {
-			Roleback.configure do |config|
+			Roleback.define do |config|
 				role :admin do
 				end
 
@@ -38,7 +38,7 @@ RSpec.describe Roleback::Configuration do
 	end
 
 	it "has a role with permissions" do
-		Roleback.configure do |config|
+		Roleback.define do |config|
 			role :admin do
 				can :view_charts
 				can :edit_tag
@@ -52,7 +52,7 @@ RSpec.describe Roleback::Configuration do
 	end
 
 	it "has a role with permissions and resources" do
-		Roleback.configure do |config|
+		Roleback.define do |config|
 			role :admin do
 				can :see_me
 				can :purge_values
@@ -70,7 +70,7 @@ RSpec.describe Roleback::Configuration do
 	end
 
 	it "adds default rules for resources" do
-		Roleback.configure do |config|
+		Roleback.define do |config|
 			role :admin do
 				resource :charts
 			end
@@ -81,7 +81,7 @@ RSpec.describe Roleback::Configuration do
 
 	it "blocks duplicate resources" do
 		expect {
-			Roleback.configure do |config|
+			Roleback.define do |config|
 				role :admin do
 					resource :charts
 					resource :charts
@@ -92,7 +92,7 @@ RSpec.describe Roleback::Configuration do
 
 	it "blocks duplicate rules by key" do
 		expect {
-			Roleback.configure do |config|
+			Roleback.define do |config|
 				role :admin do
 					can :see_me
 					can :see_me
@@ -102,7 +102,7 @@ RSpec.describe Roleback::Configuration do
 	end
 
 	it "adds the right rule" do
-		Roleback.configure do |config|
+		Roleback.define do |config|
 			role :admin do
 				can :see_me
 				cannot :fool_me
@@ -117,7 +117,7 @@ RSpec.describe Roleback::Configuration do
 	end
 
 	it "has a role with scopes" do
-		Roleback.configure do |config|
+		Roleback.define do |config|
 			role :admin do
 				can :see_me
 				cannot :fool_me
@@ -131,7 +131,7 @@ RSpec.describe Roleback::Configuration do
 
 	it "blocks duplicate scopes" do
 		expect {
-			Roleback.configure do |config|
+			Roleback.define do |config|
 				role :admin do
 					scope :api
 					scope :api
@@ -141,7 +141,7 @@ RSpec.describe Roleback::Configuration do
 	end
 
 	it "adds the right number of rules for resources" do
-		Roleback.configure do |config|
+		Roleback.define do |config|
 			role :admin do
 				resource :charts, except: [:index]
 			end
@@ -152,7 +152,7 @@ RSpec.describe Roleback::Configuration do
 
 	it "only accpets valid resource options" do
 		expect {
-			Roleback.configure do |config|
+			Roleback.define do |config|
 				role :admin do
 					resource :charts, except: [:index], invalid: [:index]
 				end
@@ -160,7 +160,7 @@ RSpec.describe Roleback::Configuration do
 		}.to raise_error(Roleback::BadConfiguration)
 
 		expect {
-			Roleback.configure do |config|
+			Roleback.define do |config|
 				role :admin do
 					resource :charts, except: [:foo]
 				end
@@ -169,7 +169,7 @@ RSpec.describe Roleback::Configuration do
 	end
 
 	it "has resources in scope" do
-		Roleback.configure do |config|
+		Roleback.define do |config|
 			role :admin do
 				scope :api do
 					resource :charts
@@ -183,7 +183,7 @@ RSpec.describe Roleback::Configuration do
 
 	it "cannot have scope in a resource" do
 		expect {
-			Roleback.configure do |config|
+			Roleback.define do |config|
 				role :admin do
 					resource :charts do
 						scope :api
@@ -195,7 +195,7 @@ RSpec.describe Roleback::Configuration do
 
 	it "cannot have nested resources" do
 		expect {
-			Roleback.configure do |config|
+			Roleback.define do |config|
 				role :admin do
 					resource :charts do
 						resource :charts
@@ -207,7 +207,7 @@ RSpec.describe Roleback::Configuration do
 
 	it "cannot have nested scopes" do
 		expect {
-			Roleback.configure do |config|
+			Roleback.define do |config|
 				role :admin do
 					scope :api do
 						scope :api
@@ -219,7 +219,7 @@ RSpec.describe Roleback::Configuration do
 
 	it "cannot have nested roles" do
 		expect {
-			Roleback.configure do |config|
+			Roleback.define do |config|
 				role :admin do
 					role :admin
 				end
@@ -229,7 +229,7 @@ RSpec.describe Roleback::Configuration do
 
 	it "rejects bad role options" do
 		expect {
-			Roleback.configure do |config|
+			Roleback.define do |config|
 				role :admin, foo: :bar
 			end
 		}.to raise_error(Roleback::BadConfiguration)
@@ -237,7 +237,7 @@ RSpec.describe Roleback::Configuration do
 
 	it "rejects non-existent parent roles" do
 		expect {
-			Roleback.configure do |config|
+			Roleback.define do |config|
 				role :admin, parent: :foo
 			end
 		}.to raise_error(Roleback::BadConfiguration)
@@ -245,7 +245,7 @@ RSpec.describe Roleback::Configuration do
 
 
 	it "can inherit roles" do
-		Roleback.configure do |config|
+		Roleback.define do |config|
 			role :admin do
 				can :administrate
 			end
@@ -260,7 +260,7 @@ RSpec.describe Roleback::Configuration do
 	end
 
 	it "rule inheritence works" do
-		Roleback.configure do |config|
+		Roleback.define do |config|
 			role :admin do
 				can :administrate
 			end
@@ -278,7 +278,7 @@ RSpec.describe Roleback::Configuration do
 	end
 
 	it "can inherit roles with multiple parents" do
-		Roleback.configure do |config|
+		Roleback.define do |config|
 			role :admin do
 				can :administrate
 			end
@@ -302,7 +302,7 @@ RSpec.describe Roleback::Configuration do
 
 	it "reject circular dependencies" do
 		expect {
-			Roleback.configure do |config|
+			Roleback.define do |config|
 				role :admin, parent: :user
 				role :moderator, parent: :admin
 				role :user, parent: :moderator
