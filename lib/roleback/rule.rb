@@ -32,6 +32,19 @@ module Roleback
 			nil
 		end
 
+		require 'debug'
+		# two rules are conflicting, when the have the same scope, resource and action, but different outcomes
+		def conflicts_with?(rule)
+			# if the rules are the same, they don't conflict
+			return false if self == rule
+
+			# if the scope, resource and action are the same, but the outcome is different, they conflict
+			return true if @scope.name == rule.scope.name && @resource.name == rule.resource.name && @action == rule.action && @outcome.outcome != rule.outcome.outcome
+
+			# otherwise, they don't conflict
+			false
+		end
+
 		# calculate a numerical value for this rule to be used for sorting
 		# the value is the sum of the following:
 		# (scope_value * scope_weight) + (resource_value * resource_weight) * (outcome_value * outcome_weight)

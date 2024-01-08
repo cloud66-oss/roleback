@@ -34,6 +34,10 @@ module Roleback
 		::Roleback::DENY
 	end
 
+	def self.clear!
+		@config = nil
+	end
+
 	class Configuration
 		attr_reader :roles
 
@@ -53,15 +57,21 @@ module Roleback
 			role.can?(scope: scope, resource: resource, action: action)
 		end
 
+		require 'debug'
 		def construct!
 			# go through all roles and find their parents
 			@roles.each do |name, role|
-				parent = role.parent
+				parents = role.parents
+				next unless parents && !parents.empty?
 
-				if parent
+				found_parents = []
+
+				parents.each do |parent|
 					found_parent = @roles[parent]
 					raise ::Roleback::BadConfiguration, "Role #{parent} not found" unless found_parent
-					role.instance_variable_set(:@parent, found_parent)
+
+					found_parents << found_parent
+					role.instance_variable_set(:@parents, found_parents)
 				end
 			end
 
@@ -92,9 +102,9 @@ module Roleback
 
 			validate_options!(options)
 
-			parent = options[:parent]
+			parents = options[:inherits_from]
 
-			role = ::Roleback::Definitions::Role.new(name, parent: parent)
+			role = ::Roleback::Definitions::Role.new(name, parents: parents)
 			role.instance_eval(&block) if block_given?
 
 			roles[name] = role
@@ -104,7 +114,7 @@ module Roleback
 		end
 
 		def validate_options!(options)
-			raise ::Roleback::BadConfiguration, "Invalid options" if options.keys.any? { |k| ![:parent].include?(k) }
+			raise ::Roleback::BadConfiguration, "Invalid options" if options.keys.any? { |k| ![:inherits_from].include?(k) }
 		end
 	end
 end

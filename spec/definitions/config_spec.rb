@@ -1,4 +1,8 @@
 RSpec.describe Roleback::Configuration do
+	before do
+		Roleback.clear!
+	end
+
 	it "fails without configuration" do
 		expect {
 			Roleback.configuration
@@ -33,8 +37,6 @@ RSpec.describe Roleback::Configuration do
 				end
 			end
 		}.to raise_error(Roleback::BadConfiguration)
-
-		expect(Roleback.configuration.roles).to have_key(:admin)
 	end
 
 	it "has a role with permissions" do
@@ -238,7 +240,7 @@ RSpec.describe Roleback::Configuration do
 	it "rejects non-existent parent roles" do
 		expect {
 			Roleback.define do |config|
-				role :admin, parent: :foo
+				role :admin, inherits_from: :foo
 			end
 		}.to raise_error(Roleback::BadConfiguration)
 	end
@@ -250,7 +252,7 @@ RSpec.describe Roleback::Configuration do
 				can :administrate
 			end
 
-			role :user, parent: :admin do
+			role :user, inherits_from: :admin do
 				can :view_charts
 			end
 		end
@@ -265,16 +267,17 @@ RSpec.describe Roleback::Configuration do
 				can :administrate
 			end
 
-			role :user, parent: :admin do
+			role :user, inherits_from: :admin do
 				can :view_charts
-				cannot :administrate
+				cannot :have_fun
 			end
 		end
 
 		expect(Roleback.configuration.roles[:admin].rules.length).to eq(1)
-		expect(Roleback.configuration.roles[:user].rules.length).to eq(2)
-		expect(Roleback.configuration.roles[:user].rules['*:/*/administrate'].outcome).to eq(Roleback::DENY)
+		expect(Roleback.configuration.roles[:user].rules.length).to eq(3)
+		expect(Roleback.configuration.roles[:user].rules['*:/*/administrate'].outcome).to eq(Roleback::ALLOW)
 		expect(Roleback.configuration.roles[:user].rules['*:/*/view_charts'].outcome).to eq(Roleback::ALLOW)
+		expect(Roleback.configuration.roles[:user].rules['*:/*/have_fun'].outcome).to eq(Roleback::DENY)
 	end
 
 	it "can inherit roles with multiple parents" do
@@ -283,11 +286,11 @@ RSpec.describe Roleback::Configuration do
 				can :administrate
 			end
 
-			role :moderator, parent: :admin do
+			role :moderator, inherits_from: :admin do
 				can :edit_posts
 			end
 
-			role :user, parent: :moderator do
+			role :user, inherits_from: :moderator do
 				can :view_posts
 			end
 		end
@@ -303,9 +306,9 @@ RSpec.describe Roleback::Configuration do
 	it "reject circular dependencies" do
 		expect {
 			Roleback.define do |config|
-				role :admin, parent: :user
-				role :moderator, parent: :admin
-				role :user, parent: :moderator
+				role :admin, inherits_from: :user
+				role :moderator, inherits_from: :admin
+				role :user, inherits_from: :moderator
 			end
 		}.to raise_error(Roleback::BadConfiguration)
 	end

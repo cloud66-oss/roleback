@@ -2,19 +2,45 @@ module Roleback
 	class RuleBook
 		attr_reader :rules
 
-		def initialize
+		def initialize(role)
 			@rules = {}
+			@role = role
 		end
 
 		def add(rule)
-			raise ::Roleback::BadConfiguration, "Rule #{rule.key} already defined" if @rules[rule.key]
+			raise ::Roleback::BadConfiguration, "Adding a rule with no role" unless rule.role
+
+			# binding.break
+			if @rules[rule.key]
+				if @rules[rule.key].outcome.outcome == rule.outcome.outcome
+					# don't allow it if they share a rulebook
+					if @role.name == rule.role.name
+						raise ::Roleback::BadConfiguration, "Rule #{rule.key} already defined"
+					else
+						# this duplicate is through inheritance, so we can safely ignore it
+						return
+					end
+				else
+					raise ::Roleback::BadConfiguration, "Rule #{rule.key} already defined with a different outcome (conflicting rules)"
+				end
+			end
+
+			# raise ::Roleback::BadConfiguration, "Rule #{rule.key} already defined"
+			# binding.break
+
+			# detect conflicting rules
+			@rules.each do |key, existing_rule|
+				if existing_rule.conflicts_with?(rule)
+					raise ::Roleback::BadConfiguration, "Rule #{rule.key} conflicts with rule #{existing_rule.key}"
+				end
+			end
 
 			@rules[rule.key] = rule
 		end
 
 		def merge_without_overwrite(rule_book)
 			rule_book.rules.each do |key, rule|
-				add(rule) unless @rules[key]
+				add(rule) #unless @rules[key]
 			end
 		end
 
@@ -47,7 +73,7 @@ module Roleback
 			return false if rules.empty?
 
 			# create a rule book with the matching rules
-			match_book = self.class.new
+			match_book = self.class.new(@role)
 			rules.each do |rule|
 				match_book.add(rule)
 			end

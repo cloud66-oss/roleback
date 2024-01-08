@@ -1,168 +1,193 @@
 RSpec.describe Roleback::RuleBook do
 	describe '#add' do
 		it 'adds a rule' do
-			rule_book = described_class.new
-			rule1 = double('rule', key: :foo)
-			rule_book.add(rule1)
-			expect(rule_book.rules).to eq({ foo: rule1 })
+			role1 = ::Roleback::Definitions::Role.new(:foo)
+			rule_book1 = described_class.new(role1)
+
+			rule1 = ::Roleback::Rule.new(role: role1, resource: ::Roleback::ANY, scope: ::Roleback::ANY, action: :show, outcome: ::Roleback::ALLOW)
+			rule_book1.add(rule1)
+
+			expect(rule_book1.keys).to eq(["*:/*/show"])
 		end
 
 		it 'raises an error if a rule with the same key already exists' do
-			rule_book = described_class.new
-			rule1 = double('rule', key: :foo)
-			rule_book.add(rule1)
-			expect { rule_book.add(rule1) }.to raise_error(Roleback::BadConfiguration)
+			role1 = ::Roleback::Definitions::Role.new(:foo)
+			rule_book1 = described_class.new(role1)
+
+			rule1 = ::Roleback::Rule.new(role: role1, resource: ::Roleback::ANY, scope: ::Roleback::ANY, action: :show, outcome: ::Roleback::ALLOW)
+			rule_book1.add(rule1)
+
+			expect { rule_book1.add(rule1) }.to raise_error(Roleback::BadConfiguration)
 		end
 	end
 
 	describe '#merge_without_overwrite' do
 		it 'merges two rule books without overwriting' do
-			rule_book = described_class.new
-			rule1 = double('rule', key: :foo)
-			rule_book.add(rule1)
+			role1 = ::Roleback::Definitions::Role.new(:foo)
+			rule_book1 = described_class.new(role1)
 
-			other_rule_book = described_class.new
-			other_rule = double('rule', key: :bar)
-			other_rule_book.add(other_rule)
+			rule1 = ::Roleback::Rule.new(role: role1, resource: ::Roleback::ANY, scope: ::Roleback::ANY, action: :show, outcome: ::Roleback::ALLOW)
+			rule_book1.add(rule1)
 
-			rule_book.merge_without_overwrite(other_rule_book)
+			rule_book2 = described_class.new(role1)
 
-			expect(rule_book.rules).to eq({ foo: rule1, bar: other_rule })
+			rule2 = ::Roleback::Rule.new(role: role1, resource: ::Roleback::ANY, scope: ::Roleback::ANY, action: :index, outcome: ::Roleback::ALLOW)
+			rule_book2.add(rule2)
+
+			rule_book1.merge_without_overwrite(rule_book2)
+
+			expect(rule_book1.keys).to eq(["*:/*/show", "*:/*/index"])
 		end
 
 		it 'does not overwrite existing rules' do
-			rule_book = described_class.new
-			rule1 = double('rule', key: :foo)
-			rule_book.add(rule1)
+			role1 = ::Roleback::Definitions::Role.new(:foo)
+			rule_book1 = described_class.new(role1)
 
-			other_rule_book = described_class.new
-			other_rule = double('rule', key: :foo)
-			other_rule_book.add(other_rule)
+			rule1 = ::Roleback::Rule.new(role: role1, resource: ::Roleback::ANY, scope: ::Roleback::ANY, action: :show, outcome: ::Roleback::ALLOW)
+			rule_book1.add(rule1)
 
-			rule_book.merge_without_overwrite(other_rule_book)
+			role2 = ::Roleback::Definitions::Role.new(:bar)
+			rule_book2 = described_class.new(role2)
+			rule2 = ::Roleback::Rule.new(role: role2, resource: ::Roleback::ANY, scope: ::Roleback::ANY, action: :show, outcome: ::Roleback::ALLOW)
+			rule_book2.add(rule2)
 
-			expect(rule_book.rules).to eq({ foo: rule1 })
+			rule_book1.merge_without_overwrite(rule_book2)
+
+			expect(rule_book1.keys).to eq(["*:/*/show"])
 		end
 	end
 
 	describe '#length' do
 		it 'returns the number of rules' do
-			rule_book = described_class.new
-			rule1 = double('rule', key: :foo)
-			rule_book.add(rule1)
-			expect(rule_book.length).to eq(1)
+			role1 = ::Roleback::Definitions::Role.new(:foo)
+			rule_book1 = described_class.new(role1)
+
+			rule1 = ::Roleback::Rule.new(role: role1, resource: ::Roleback::ANY, scope: ::Roleback::ANY, action: :show, outcome: ::Roleback::ALLOW)
+			rule_book1.add(rule1)
+
+			expect(rule_book1.length).to eq(1)
 		end
 	end
 
 	describe '#[]' do
 		it 'returns the rule with the given key' do
-			rule_book = described_class.new
-			rule1 = double('rule', key: :foo)
-			rule_book.add(rule1)
-			expect(rule_book[:foo]).to eq(rule1)
+			role1 = ::Roleback::Definitions::Role.new(:foo)
+			rule_book1 = described_class.new(role1)
+
+			rule1 = ::Roleback::Rule.new(role: role1, resource: ::Roleback::ANY, scope: ::Roleback::ANY, action: :show, outcome: ::Roleback::ALLOW)
+			rule_book1.add(rule1)
+
+			expect(rule_book1["*:/*/show"]).to eq(rule1)
 		end
 	end
 
 	describe '#keys' do
 		it 'returns the keys of the rules' do
-			rule_book = described_class.new
-			rule1 = double('rule', key: :foo)
-			rule_book.add(rule1)
-			expect(rule_book.keys).to eq([:foo])
+			role1 = ::Roleback::Definitions::Role.new(:foo)
+			rule_book1 = described_class.new(role1)
+
+			rule1 = ::Roleback::Rule.new(role: role1, resource: ::Roleback::ANY, scope: ::Roleback::ANY, action: :show, outcome: ::Roleback::ALLOW)
+			rule_book1.add(rule1)
+
+			expect(rule_book1.keys).to eq(["*:/*/show"])
 		end
 	end
 
 	describe '#match' do
 		it 'returns all rules that matches the given resource, scope and action' do
-			rule_book = ::Roleback::RuleBook.new
+			role1 = double('role', name: :foo)
+			rule_book1 = ::Roleback::RuleBook.new(role1)
 
-			role = ::Roleback::Definitions::Role.new(:admin)
-			resource = ::Roleback::Definitions::Resource.new(:users, role: role)
-			scope1 = ::Roleback::Definitions::Scope.new(:admin, role: role)
-			scope2 = ::Roleback::Definitions::Scope.new(:public, role: role)
+			role1 = ::Roleback::Definitions::Role.new(:admin)
+			resource = ::Roleback::Definitions::Resource.new(:users, role: role1)
+			scope1 = ::Roleback::Definitions::Scope.new(:admin, role: role1)
+			scope2 = ::Roleback::Definitions::Scope.new(:public, role: role1)
 
-			rule1 = ::Roleback::Rule.new(role: role, resource: resource, scope: scope1, action: :show, outcome: ::Roleback::ALLOW)
-			rule_book.add(rule1)
+			rule1 = ::Roleback::Rule.new(role: role1, resource: resource, scope: scope1, action: :show, outcome: ::Roleback::ALLOW)
+			rule_book1.add(rule1)
 
-			rule2 = ::Roleback::Rule.new(role: role, resource: resource, scope: scope1, action: :index, outcome: ::Roleback::DENY)
-			rule_book.add(rule2)
+			rule2 = ::Roleback::Rule.new(role: role1, resource: resource, scope: scope1, action: :index, outcome: ::Roleback::DENY)
+			rule_book1.add(rule2)
 
-			rule3 = ::Roleback::Rule.new(role: role, resource: resource, scope: scope2, action: :show, outcome: ::Roleback::ALLOW)
-			rule_book.add(rule3)
+			rule3 = ::Roleback::Rule.new(role: role1, resource: resource, scope: scope2, action: :show, outcome: ::Roleback::ALLOW)
+			rule_book1.add(rule3)
 
-			expect(rule_book.match_all(resource: Roleback::any, scope: Roleback::any, action: :show)).to eq([rule1, rule3])
-			expect(rule_book.match_all(resource: resource, scope: Roleback::any, action: :show)).to eq([rule1, rule3])
-			expect(rule_book.match_all(resource: Roleback::any, scope: scope1, action: :show)).to eq([rule1])
-			expect(rule_book.match_all(resource: resource, scope: scope1, action: :show)).to eq([rule1])
-			expect(rule_book.match_all(resource: resource, scope: scope1, action: :index)).to eq([rule2])
+			expect(rule_book1.match_all(resource: Roleback::any, scope: Roleback::any, action: :show)).to eq([rule1, rule3])
+			expect(rule_book1.match_all(resource: resource, scope: Roleback::any, action: :show)).to eq([rule1, rule3])
+			expect(rule_book1.match_all(resource: Roleback::any, scope: scope1, action: :show)).to eq([rule1])
+			expect(rule_book1.match_all(resource: resource, scope: scope1, action: :show)).to eq([rule1])
+			expect(rule_book1.match_all(resource: resource, scope: scope1, action: :index)).to eq([rule2])
 		end
 	end
 
 	describe '#can?' do
 		it 'returns true if the user can perform the action on the resource' do
-			rule_book = ::Roleback::RuleBook.new
+			role1 = double('role', name: :foo)
+			rule_book1 = ::Roleback::RuleBook.new(role1)
 
-			role = ::Roleback::Definitions::Role.new(:admin)
-			resource = ::Roleback::Definitions::Resource.new(:users, role: role)
-			scope1 = ::Roleback::Definitions::Scope.new(:admin, role: role)
-			scope2 = ::Roleback::Definitions::Scope.new(:public, role: role)
+			role1 = ::Roleback::Definitions::Role.new(:admin)
+			resource = ::Roleback::Definitions::Resource.new(:users, role: role1)
+			scope1 = ::Roleback::Definitions::Scope.new(:admin, role: role1)
+			scope2 = ::Roleback::Definitions::Scope.new(:public, role: role1)
 
-			rule1 = ::Roleback::Rule.new(role: role, resource: resource, scope: scope1, action: :show, outcome: ::Roleback::ALLOW)
-			rule_book.add(rule1)
+			rule1 = ::Roleback::Rule.new(role: role1, resource: resource, scope: scope1, action: :show, outcome: ::Roleback::ALLOW)
+			rule_book1.add(rule1)
 
-			rule2 = ::Roleback::Rule.new(role: role, resource: resource, scope: scope1, action: :index, outcome: ::Roleback::DENY)
-			rule_book.add(rule2)
+			rule2 = ::Roleback::Rule.new(role: role1, resource: resource, scope: scope1, action: :index, outcome: ::Roleback::DENY)
+			rule_book1.add(rule2)
 
-			rule3 = ::Roleback::Rule.new(role: role, resource: resource, scope: scope2, action: :show, outcome: ::Roleback::ALLOW)
-			rule_book.add(rule3)
+			rule3 = ::Roleback::Rule.new(role: role1, resource: resource, scope: scope2, action: :show, outcome: ::Roleback::ALLOW)
+			rule_book1.add(rule3)
 
-			expect(rule_book.can?(resource: resource, scope: scope1, action: :show)).to eq(true)
-			expect(rule_book.can?(resource: resource, scope: scope1, action: :index)).to eq(false)
-			expect(rule_book.can?(resource: resource, scope: scope2, action: :show)).to eq(true)
-			expect(rule_book.can?(resource: resource, scope: scope2, action: :index)).to eq(false)
-			expect(rule_book.can?(resource: resource, scope: scope2, action: :create)).to eq(false)
+			expect(rule_book1.can?(resource: resource, scope: scope1, action: :show)).to eq(true)
+			expect(rule_book1.can?(resource: resource, scope: scope1, action: :index)).to eq(false)
+			expect(rule_book1.can?(resource: resource, scope: scope2, action: :show)).to eq(true)
+			expect(rule_book1.can?(resource: resource, scope: scope2, action: :index)).to eq(false)
+			expect(rule_book1.can?(resource: resource, scope: scope2, action: :create)).to eq(false)
 		end
 
 		it 'returns the explict outcome over a any outcome' do
-			rule_book = ::Roleback::RuleBook.new
+			role1 = double('role', name: :foo)
+			rule_book1 = ::Roleback::RuleBook.new(role1)
 
-			role = ::Roleback::Definitions::Role.new(:admin)
-			resource = ::Roleback::Definitions::Resource.new(:users, role: role)
-			scope = ::Roleback::Definitions::Scope.new(:admin, role: role)
+			role1 = ::Roleback::Definitions::Role.new(:admin)
+			resource = ::Roleback::Definitions::Resource.new(:users, role: role1)
+			scope = ::Roleback::Definitions::Scope.new(:admin, role: role1)
 
 			# explict deny
-			rule1 = ::Roleback::Rule.new(role: role, resource: resource, scope: scope, action: :show, outcome: ::Roleback::DENY)
+			rule1 = ::Roleback::Rule.new(role: role1, resource: resource, scope: scope, action: :show, outcome: ::Roleback::DENY)
 
 			# any allow
-			rule2 = ::Roleback::Rule.new(role: role, resource: ::Roleback::ANY, scope: ::Roleback::ANY, action: :show, outcome: ::Roleback::ALLOW)
+			rule2 = ::Roleback::Rule.new(role: role1, resource: ::Roleback::ANY, scope: ::Roleback::ANY, action: :show, outcome: ::Roleback::ALLOW)
 
-			rule_book.add(rule1)
-			rule_book.add(rule2)
+			rule_book1.add(rule1)
+			rule_book1.add(rule2)
 
-			expect(rule_book.can?(resource: resource, scope: scope, action: :show)).to eq(false)
+			expect(rule_book1.can?(resource: resource, scope: scope, action: :show)).to eq(false)
 		end
 
 		it 'returns the explict allow over a any deny outcome' do
-			rule_book = ::Roleback::RuleBook.new
+			role1 = double('role', name: :foo)
+			rule_book1 = ::Roleback::RuleBook.new(role1)
 
-			role = ::Roleback::Definitions::Role.new(:admin)
-			resource = ::Roleback::Definitions::Resource.new(:users, role: role)
-			scope = ::Roleback::Definitions::Scope.new(:admin, role: role)
+			role1 = ::Roleback::Definitions::Role.new(:admin)
+			resource = ::Roleback::Definitions::Resource.new(:users, role: role1)
+			scope = ::Roleback::Definitions::Scope.new(:admin, role: role1)
 
 			# explict allow
-			rule1 = ::Roleback::Rule.new(role: role, resource: resource, scope: scope, action: :show, outcome: ::Roleback::ALLOW)
+			rule1 = ::Roleback::Rule.new(role: role1, resource: resource, scope: scope, action: :show, outcome: ::Roleback::ALLOW)
 
 			# any deny
-			rule2 = ::Roleback::Rule.new(role: role, resource: ::Roleback::ANY, scope: ::Roleback::ANY, action: :show, outcome: ::Roleback::DENY)
+			rule2 = ::Roleback::Rule.new(role: role1, resource: ::Roleback::ANY, scope: ::Roleback::ANY, action: :show, outcome: ::Roleback::DENY)
 
-			rule_book.add(rule1)
-			rule_book.add(rule2)
+			rule_book1.add(rule1)
+			rule_book1.add(rule2)
 
 			# explict question
-			expect(rule_book.can?(resource: resource, scope: scope, action: :show)).to eq(true)
+			expect(rule_book1.can?(resource: resource, scope: scope, action: :show)).to eq(true)
 
 			# any question
-			expect(rule_book.can?(resource: ::Roleback::ANY, scope: ::Roleback::ANY, action: :show)).to eq(true)
+			expect(rule_book1.can?(resource: ::Roleback::ANY, scope: ::Roleback::ANY, action: :show)).to eq(true)
 
 		end
 	end

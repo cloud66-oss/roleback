@@ -2,14 +2,25 @@ module Roleback
 	module Definitions
 		class Role < Roleback::Definitions::RuleBased
 			attr_reader :name
-			attr_reader :parent
+			attr_reader :parents
 
-			def initialize(name, parent: nil)
+			def initialize(name, parents: nil)
 				@name = name
-				@rule_book = ::Roleback::RuleBook.new
+				@rule_book = ::Roleback::RuleBook.new(self)
 				@scopes = {}
 				@resources = {}
-				@parent = parent
+
+				if parents
+					if parents.is_a?(Symbol)
+						@parents = [parents]
+					elsif parents.is_a?(Array)
+						@parents = parents
+					else
+						raise ::Roleback::BadConfiguration, "Parent must be a symbol or an array of symbols"
+					end
+				else
+					@parents = nil
+				end
 
 				super(role: self, resource: ::Roleback::ANY, scope: ::Roleback::ANY)
 			end
@@ -41,24 +52,38 @@ module Roleback
 			end
 
 			def inherit
-				do_inherit
+				trace = {}
+				@parents.each { |parent| trace[parent.to_s] = Set.new } if @parents && !@parents.empty?
+
+				do_inherit(trace)
+			end
+
+			def to_s
+				self.name.to_s
 			end
 
 			private
 
-			def do_inherit(trace = Set.new)
-				# does this role have a parent, if so, call inherit on it
-				parent = @parent
-				return unless parent
+			# merge rules from a single parental line
+			def do_inherit(trace)
+				# for all parents of this role, inherit their rules
 
-				raise ::Roleback::BadConfiguration, "Circular dependency detected: #{trace.to_a.map(&:name).join(' -> ')} -> #{parent.name}" if trace.include?(parent)
+				return unless @parents
 
-				trace << parent
+				@parents.each do |parent|
+					trace[self.name] = Set.new if !trace.has_key?(self.name)
 
-				parent.send(:do_inherit, trace)
+					if trace[self.name].include?(parent.to_s)
+						raise ::Roleback::BadConfiguration, "Circular dependency detected: #{trace[self.name].to_a.join(' -> ')} -> #{parent.name}"
+					end
 
-				# inherit parent's rules
-				@rule_book.merge_without_overwrite(parent.rules)
+					trace[self.name] << parent.to_s
+
+					parent.send(:do_inherit, trace)
+
+					# inherit parent's rules
+					@rule_book.merge_without_overwrite(parent.rules)
+				end
 			end
 
 		end
