@@ -121,6 +121,9 @@ Roleback.can?(:admin, resource: :post, action: :read) # => true
 Roleback.can?(:editor, resource: :post, :delete) # => false
 ```
 
+When checking for permissions, Rolebacks looks for the most explicit rule that matches the given parameters and works its way down to the least explicit. Deny rules always win over grant rules.
+
+
 ### `User` class
 If you have a `User` class, Roleback will automatically, add a `can?` method to it:
 
