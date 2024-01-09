@@ -14,6 +14,9 @@ module Roleback
 					if parents.is_a?(Symbol)
 						@parents = [parents]
 					elsif parents.is_a?(Array)
+						# check for duplicates
+						raise ::Roleback::BadConfiguration, "Duplicate parents found for role #{name}" if parents.uniq.length != parents.length
+
 						@parents = parents
 					else
 						raise ::Roleback::BadConfiguration, "Parent must be a symbol or an array of symbols"
@@ -51,39 +54,51 @@ module Roleback
 				@scopes[name] = scope
 			end
 
-			def inherit
-				trace = {}
-				@parents.each { |parent| trace[parent.to_s] = Set.new } if @parents && !@parents.empty?
-
-				do_inherit(trace)
-			end
-
 			def to_s
 				self.name.to_s
+			end
+
+			def inherit
+				combined_rules = rules.to_a
+
+				if @parents && !@parents.empty?
+					@parents.each do |parent|
+						parent_rules = do_inherit([], parent, Set.new)
+						combined_rules += parent_rules
+					end
+				end
+
+				# replace the rules with the combined rules
+				unless combined_rules.empty?
+					@rule_book.clear_rules
+					combined_rules.each do |rule|
+						@rule_book.add(rule)
+					end
+				end
 			end
 
 			private
 
 			# merge rules from a single parental line
-			def do_inherit(trace)
-				# for all parents of this role, inherit their rules
+			def do_inherit(combined_rules, lineage, trace)
+				return lineage.rules.to_a unless lineage.parents
 
-				return unless @parents
+				# add it to the trace
+				trace.add(lineage.name.to_s)
 
-				@parents.each do |parent|
-					trace[self.name] = Set.new if !trace.has_key?(self.name)
+				# inherit parent's rules
+				combined_rules += lineage.rules.to_a
 
-					if trace[self.name].include?(parent.to_s)
-						raise ::Roleback::BadConfiguration, "Circular dependency detected: #{trace[self.name].to_a.join(' -> ')} -> #{parent.name}"
-					end
+				# iterate over the parents
+				lineage.parents.each do |parent|
+					# check for circular references
+					raise ::Roleback::BadConfiguration, "Circular dependency detected in role #{self.name.to_s}: #{trace.to_a.join(' -> ')}" if trace.include?(parent.to_s)
 
-					trace[self.name] << parent.to_s
-
-					parent.send(:do_inherit, trace)
-
-					# inherit parent's rules
-					@rule_book.merge_without_overwrite(parent.rules)
+					# inherit the parent's rules
+					combined_rules += do_inherit(combined_rules, parent, trace)
 				end
+
+				combined_rules
 			end
 
 		end

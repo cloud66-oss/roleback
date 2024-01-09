@@ -32,7 +32,6 @@ module Roleback
 			nil
 		end
 
-		require 'debug'
 		# two rules are conflicting, when the have the same scope, resource and action, but different outcomes
 		def conflicts_with?(rule)
 			# if the rules are the same, they don't conflict

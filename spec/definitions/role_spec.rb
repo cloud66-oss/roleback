@@ -26,12 +26,6 @@ RSpec.describe Roleback::Definitions::Role do
 	end
 
 	describe '#inherit' do
-		it 'calls the private method do_inherit' do
-			role = Roleback::Definitions::Role.new(:role_name)
-			expect(role).to receive(:do_inherit)
-			role.inherit
-		end
-
 		it 'supports single inheritance' do
 			Roleback.define do |config|
 				role :admin do

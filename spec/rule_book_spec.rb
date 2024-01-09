@@ -21,42 +21,6 @@ RSpec.describe Roleback::RuleBook do
 		end
 	end
 
-	describe '#merge_without_overwrite' do
-		it 'merges two rule books without overwriting' do
-			role1 = ::Roleback::Definitions::Role.new(:foo)
-			rule_book1 = described_class.new(role1)
-
-			rule1 = ::Roleback::Rule.new(role: role1, resource: ::Roleback::ANY, scope: ::Roleback::ANY, action: :show, outcome: ::Roleback::ALLOW)
-			rule_book1.add(rule1)
-
-			rule_book2 = described_class.new(role1)
-
-			rule2 = ::Roleback::Rule.new(role: role1, resource: ::Roleback::ANY, scope: ::Roleback::ANY, action: :index, outcome: ::Roleback::ALLOW)
-			rule_book2.add(rule2)
-
-			rule_book1.merge_without_overwrite(rule_book2)
-
-			expect(rule_book1.keys).to eq(["*:/*/show", "*:/*/index"])
-		end
-
-		it 'does not overwrite existing rules' do
-			role1 = ::Roleback::Definitions::Role.new(:foo)
-			rule_book1 = described_class.new(role1)
-
-			rule1 = ::Roleback::Rule.new(role: role1, resource: ::Roleback::ANY, scope: ::Roleback::ANY, action: :show, outcome: ::Roleback::ALLOW)
-			rule_book1.add(rule1)
-
-			role2 = ::Roleback::Definitions::Role.new(:bar)
-			rule_book2 = described_class.new(role2)
-			rule2 = ::Roleback::Rule.new(role: role2, resource: ::Roleback::ANY, scope: ::Roleback::ANY, action: :show, outcome: ::Roleback::ALLOW)
-			rule_book2.add(rule2)
-
-			rule_book1.merge_without_overwrite(rule_book2)
-
-			expect(rule_book1.keys).to eq(["*:/*/show"])
-		end
-	end
-
 	describe '#length' do
 		it 'returns the number of rules' do
 			role1 = ::Roleback::Definitions::Role.new(:foo)

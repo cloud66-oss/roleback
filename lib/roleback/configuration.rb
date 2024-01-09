@@ -57,7 +57,6 @@ module Roleback
 			role.can?(scope: scope, resource: resource, action: action)
 		end
 
-		require 'debug'
 		def construct!
 			# go through all roles and find their parents
 			@roles.each do |name, role|

@@ -313,4 +313,38 @@ RSpec.describe Roleback::Configuration do
 		}.to raise_error(Roleback::BadConfiguration)
 	end
 
+	it 'rejects repeated parents' do
+		expect {
+			Roleback.define do |config|
+				role :user
+				role :admin, inherits_from: [:user, :user]
+			end
+		}.to raise_error(Roleback::BadConfiguration)
+	end
+
+	it 'shared ancestry' do
+		Roleback.define do
+			role :junior_staff do
+			  can :comment
+			end
+
+			role :support, inherits_from: :junior_staff do
+			  can :use
+			end
+
+			role :junior_engineer, inherits_from: :support do
+			  can :make
+			end
+
+			role :engineer, inherits_from: [:junior_engineer, :support] do
+			  can :fix
+			end
+		  end
+
+		  expect(Roleback.configuration.roles[:junior_staff].rules.length).to eq(1)
+		  expect(Roleback.configuration.roles[:support].rules.length).to eq(2)
+		  expect(Roleback.configuration.roles[:junior_engineer].rules.length).to eq(3)
+		  expect(Roleback.configuration.roles[:engineer].rules.length).to eq(4)
+	end
+
 end

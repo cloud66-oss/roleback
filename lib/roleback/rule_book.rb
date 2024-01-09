@@ -10,7 +10,6 @@ module Roleback
 		def add(rule)
 			raise ::Roleback::BadConfiguration, "Adding a rule with no role" unless rule.role
 
-			# binding.break
 			if @rules[rule.key]
 				if @rules[rule.key].outcome.outcome == rule.outcome.outcome
 					# don't allow it if they share a rulebook
@@ -25,23 +24,18 @@ module Roleback
 				end
 			end
 
-			# raise ::Roleback::BadConfiguration, "Rule #{rule.key} already defined"
-			# binding.break
-
 			# detect conflicting rules
 			@rules.each do |key, existing_rule|
 				if existing_rule.conflicts_with?(rule)
-					raise ::Roleback::BadConfiguration, "Rule #{rule.key} conflicts with rule #{existing_rule.key}"
+					raise ::Roleback::BadConfiguration, "Rule #{rule.key} conflicts with #{existing_rule.key}"
 				end
 			end
 
 			@rules[rule.key] = rule
 		end
 
-		def merge_without_overwrite(rule_book)
-			rule_book.rules.each do |key, rule|
-				add(rule) #unless @rules[key]
-			end
+		def clear_rules
+			@rules = {}
 		end
 
 		def length
@@ -116,6 +110,10 @@ module Roleback
 
 		def to_s
 			@rules.values.map(&:to_s).join("\n")
+		end
+
+		def to_a
+			@rules.values
 		end
 	end
 end
