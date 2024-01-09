@@ -59,46 +59,108 @@ module Roleback
 			end
 
 			def inherit
-				combined_rules = rules.to_a
+				return if @parents.nil?
 
-				if @parents && !@parents.empty?
-					@parents.each do |parent|
-						parent_rules = do_inherit([], parent, Set.new)
-						combined_rules += parent_rules
-					end
+				new_rules = do_inherit
+
+				if new_rules.empty?
+					# no rules to inherit
+					return
 				end
 
-				# replace the rules with the combined rules
-				unless combined_rules.empty?
-					@rule_book.clear_rules
-					combined_rules.each do |rule|
-						@rule_book.add(rule)
-					end
+				# add the new rules to the rule book
+				self.rules.clear_rules
+				new_rules.each do |rule|
+					self.rules.add(rule)
 				end
 			end
 
 			private
 
-			# merge rules from a single parental line
-			def do_inherit(combined_rules, lineage, trace)
-				return lineage.rules.to_a unless lineage.parents
+			def do_inherit(rule_set = [], level = 0)
+				# don't go too deep
+				raise ::Roleback::BadConfiguration, "Circular dependency detected (#{level} out of maximum allowed of #{::Roleback.configuration.max_inheritance_depth})" if level > ::Roleback.configuration.max_inheritance_depth
 
-				# add it to the trace
-				trace.add(lineage.name.to_s)
+				new_rules = rule_set + self.rules.to_a
 
-				# inherit parent's rules
-				combined_rules += lineage.rules.to_a
+				return new_rules if @parents.nil? || @parents.empty?
 
-				# iterate over the parents
-				lineage.parents.each do |parent|
-					# check for circular references
-					raise ::Roleback::BadConfiguration, "Circular dependency detected in role #{self.name.to_s}: #{trace.to_a.join(' -> ')}" if trace.include?(parent.to_s)
-
-					# inherit the parent's rules
-					combined_rules += do_inherit(combined_rules, parent, trace)
+				@parents.each do |parent|
+					parent_rules = parent.send(:do_inherit, rule_set, level + 1)
+					new_rules = new_rules + parent_rules
 				end
 
-				combined_rules
+				return new_rules
+			end
+
+			# Experiment
+			# h is a hash of node name -> [parent1, parent2, ...]
+			def build_graph(h = {}, level = 0)
+				# don't go too deep
+				if level > 16
+					puts "		Too deep"
+					return h
+				end
+
+				add_parents(h)
+
+				if @parents
+					@parents.each do |parent|
+						h = parent.send(:build_graph, h, level + 1)
+					end
+				end
+
+				h
+			end
+
+			def has_circular_dependency?(h)
+				# find the root
+				root = find_root(h)
+
+				# if there is no root, there is no circular dependency
+				return false unless root
+
+				# if the root has no parents, there is no circular dependency
+				return false unless h[root]
+
+				# if the root has parents, there is a circular dependency
+				true
+			end
+
+
+			def add_parents(h)
+				h[self.name] = nil unless h.has_key?(self.name)
+
+				if @parents
+					unique_parent_names = @parents.map(&:to_s).uniq
+					if h[self.name]
+						h[self.name] = (h[self.name] + unique_parent_names).uniq
+					else
+						h[self.name] = unique_parent_names
+					end
+				end
+			end
+
+			# find the root of the tree
+			def find_root(h)
+				h.each do |k, v|
+					return k if v.nil?
+				end
+
+				nil
+			end
+
+			def delete_root(h)
+				root = find_root(h)
+				h.delete(root)
+
+				h.each do |k, v|
+					if v
+						v.delete(root)
+					end
+				end
+
+				h
 			end
 
 		end

@@ -40,10 +40,17 @@ module Roleback
 
 	class Configuration
 		attr_reader :roles
+		attr_reader :max_inheritance_depth
 
 		def initialize(options = {})
 			@options = options
 			@roles = {}
+
+			if options[:max_inheritance_depth]
+				@max_inheritance_depth = options[:max_inheritance_depth]
+			else
+				@max_inheritance_depth = 10
+			end
 		end
 
 		def find_role!(name)

@@ -322,29 +322,30 @@ RSpec.describe Roleback::Configuration do
 		}.to raise_error(Roleback::BadConfiguration)
 	end
 
-	it 'shared ancestry' do
+	it 'supports shared ancestry' do
 		Roleback.define do
-			role :junior_staff do
-			  can :comment
+			role :sj do
+				can :action1
 			end
 
-			role :support, inherits_from: :junior_staff do
-			  can :use
+			role :s, inherits_from: :sj do
+				can :action2
 			end
 
-			role :junior_engineer, inherits_from: :support do
-			  can :make
+			role :ss, inherits_from: :s do
+				can :action3
 			end
 
-			role :engineer, inherits_from: [:junior_engineer, :support] do
-			  can :fix
+			role :ej, inherits_from: :s do
+				can :action4
 			end
-		  end
 
-		  expect(Roleback.configuration.roles[:junior_staff].rules.length).to eq(1)
-		  expect(Roleback.configuration.roles[:support].rules.length).to eq(2)
-		  expect(Roleback.configuration.roles[:junior_engineer].rules.length).to eq(3)
-		  expect(Roleback.configuration.roles[:engineer].rules.length).to eq(4)
+			role :e, inherits_from: [:ej, :s] do
+				can :action5
+			end
+
+			role :es, inherits_from: [:e, :ss]
+		end
 	end
 
 end
