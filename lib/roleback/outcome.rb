@@ -46,7 +46,7 @@ module Roleback
 			return true if other.is_a?(Any)
 			return false unless other.respond_to?(:name)
 
-			other.name == name
+			other.name.to_s == name.to_s
 		end
 
 		def match(scope)

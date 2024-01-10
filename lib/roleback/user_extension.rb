@@ -21,7 +21,7 @@ module Roleback
 					end
 
 					roles.each do |role|
-						return true if ::Roleback.configuration.can?(role, resource: resource, scope: scope, action: action)
+						return true if ::Roleback.can?(role.to_sym, resource: resource, scope: scope, action: action)
 					end
 
 					# no role can perform the action on the resource

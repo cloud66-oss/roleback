@@ -24,7 +24,7 @@ module Roleback
 
 		def match(resource:, scope:, action:)
 			if @resource.match(resource) && @scope.match(scope)
-				if @action == ::Roleback::ANY || @action == action
+				if @action == ::Roleback.any || @action.to_s == action.to_s
 					return self
 				end
 			end

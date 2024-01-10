@@ -110,6 +110,24 @@ RSpec.describe Roleback::RuleBook do
 			expect(rule_book1.can?(resource: resource, scope: scope2, action: :create)).to eq(false)
 		end
 
+		it 'should accept symbols for resource, scope and action' do
+			Roleback.define do
+				role :admin, inherits_from: :moderator do
+					resource :users
+				end
+
+				role :moderator, inherits_from: :user do
+					resource :posts
+				end
+
+				role :user do
+					resource :comments
+				end
+			end
+
+			expect(Roleback.can?(:admin, resource: :users, scope: :admin, action: :show)).to eq(true)
+		end
+
 		it 'returns the explict outcome over a any outcome' do
 			role1 = double('role', name: :foo)
 			rule_book1 = ::Roleback::RuleBook.new(role1)

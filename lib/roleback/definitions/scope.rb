@@ -18,7 +18,8 @@ module Roleback
 			end
 
 			def match(scope)
-				@name == scope.name || @name == ::Roleback::ANY || scope == ::Roleback::ANY
+				to_check = scope.is_a?(::Roleback::Definitions::Scope) ? scope.name.to_s : scope.to_s
+				@name.to_s == scope.name.to_s || @name == ::Roleback.any || scope == ::Roleback.any
 			end
 
 			def ==(other)

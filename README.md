@@ -188,9 +188,9 @@ After the definition of roles is finished (`Roleback.define`), all each role, en
 If you have a `User` class, Roleback will automatically, add a `can?` method to it:
 
 ```ruby
-user = User.find(1)
-user.can?(:admin, resource: :post, action: :read) # => true
-user.can?(:editor, resource: :post, :delete) # => false
+user = User.find(1) # user.roles => [:admin]
+user.can?(resource: :post, action: :read) # => true
+user.can?(resource: :post, :delete) # => false
 ```
 
 Your `User` class has to have a method called `roles` that returns an array of role names as symbols.
@@ -200,7 +200,7 @@ The `User` class returns an array of roles, then Roleback will check each role f
 You can change the class to be extended from `User`, using `user_class` option in `define`:
 
 ```ruby
-Roleback.define(user_class: Admin) do
+Roleback.define user_class: Admin do
   # ...
 end
 ```
@@ -208,7 +208,7 @@ end
 If you don't want to extend your `User` class, pass in `nil` as the `user_class` option:
 
 ```ruby
-Roleback.define(user_class: nil) do
+Roleback.define user_class: nil do
   # ...
 end
 ```

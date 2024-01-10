@@ -24,7 +24,8 @@ module Roleback
 			end
 
 			def match(resource)
-				@name == resource.name || @name == ::Roleback::ANY || resource == ::Roleback::ANY
+				to_check = resource.is_a?(::Roleback::Definitions::Resource) ? resource.name.to_s : resource.to_s
+				@name.to_s == to_check || @name == ::Roleback.any || resource == ::Roleback.any
 			end
 
 			def ==(other)

@@ -1,6 +1,6 @@
 module Roleback
 	def self.define(options = {}, &block)
-		@config = ::Roleback::Builder.new(options, &block).build if block_given?
+		@config = ::Roleback::Configuration::Builder.new(options, &block).build if block_given?
 		@config.construct!
 
 		# is there a ::User class defined?
@@ -38,6 +38,18 @@ module Roleback
 		@config = nil
 	end
 
+	def self.roles
+		self.configuration.roles
+	end
+
+	def self.can?(role_name, resource: ::Roleback.any, scope: ::Roleback.any, action: ::Roleback.any)
+		role = self.configuration.find_role!(role_name)
+
+		return true if role.rules.can?(resource: resource, scope: scope, action: action)
+
+		false
+	end
+
 	class Configuration
 		attr_reader :roles
 		attr_reader :max_inheritance_depth
@@ -54,7 +66,7 @@ module Roleback
 		end
 
 		def find_role!(name)
-			role = self.roles[name]
+			role = self.roles[name.to_sym]
 			raise ::Roleback::MissingRole, "Role #{name} not found" unless role
 			role
 		end
@@ -86,41 +98,41 @@ module Roleback
 				role.inherit
 			end
 		end
-	end
 
-	class Builder
-		def initialize(options = {}, &block)
-			@options = options
-			@config = ::Roleback::Configuration.new(options)
-			@parent = nil
+		class Builder
+			def initialize(options = {}, &block)
+				@options = options
+				@config = ::Roleback::Configuration.new(options)
+				@parent = nil
 
-			instance_eval(&block) if block_given?
-		end
+				instance_eval(&block) if block_given?
+			end
 
-		def build
-			@config
-		end
+			def build
+				@config
+			end
 
-		def role(name, options = {}, &block)
-			roles = @config.instance_variable_get(:@roles) || {}
+			def role(name, options = {}, &block)
+				roles = @config.instance_variable_get(:@roles) || {}
 
-			raise ::Roleback::BadConfiguration, "Role #{name} already defined" if roles[name]
+				raise ::Roleback::BadConfiguration, "Role #{name} already defined" if roles[name]
 
-			validate_options!(options)
+				validate_options!(options)
 
-			parents = options[:inherits_from]
+				parents = options[:inherits_from]
 
-			role = ::Roleback::Definitions::Role.new(name, parents: parents)
-			role.instance_eval(&block) if block_given?
+				role = ::Roleback::Definitions::Role.new(name, parents: parents)
+				role.instance_eval(&block) if block_given?
 
-			roles[name] = role
-			@config.instance_variable_set(:@roles, roles)
+				roles[name] = role
+				@config.instance_variable_set(:@roles, roles)
 
-			role
-		end
+				role
+			end
 
-		def validate_options!(options)
-			raise ::Roleback::BadConfiguration, "Invalid options" if options.keys.any? { |k| ![:inherits_from].include?(k) }
+			def validate_options!(options)
+				raise ::Roleback::BadConfiguration, "Invalid options" if options.keys.any? { |k| ![:inherits_from].include?(k) }
+			end
 		end
 	end
 end
