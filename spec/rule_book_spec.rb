@@ -140,7 +140,7 @@ RSpec.describe Roleback::RuleBook do
 			rule1 = ::Roleback::Rule.new(role: role1, resource: resource, scope: scope, action: :show, outcome: ::Roleback::DENY)
 
 			# any allow
-			rule2 = ::Roleback::Rule.new(role: role1, resource: ::Roleback::ANY, scope: ::Roleback::ANY, action: :show, outcome: ::Roleback::ALLOW)
+			rule2 = ::Roleback::Rule.new(role: role1, resource: ::Roleback.any, scope: ::Roleback::any, action: :show, outcome: ::Roleback::ALLOW)
 
 			rule_book1.add(rule1)
 			rule_book1.add(rule2)
@@ -201,23 +201,23 @@ RSpec.describe Roleback::RuleBook do
 
 			expect(rules.length).to eq(18)
 
-			# make sure the rules are sorted correctly based on the following list
+			# make sure the rules are sorted correctly based on the following values:
 			expect(sorted_rules[0].to_s).to eq('api:/users/work->deny')
-			expect(sorted_rules[1].to_s).to eq('api:/users/rest->allow')
-			expect(sorted_rules[2].to_s).to eq('api:/users/create->allow')
-			expect(sorted_rules[3].to_s).to eq('api:/users/show->allow')
-			expect(sorted_rules[4].to_s).to eq('api:/users/update->allow')
-			expect(sorted_rules[5].to_s).to eq('api:/users/delete->allow')
-			expect(sorted_rules[6].to_s).to eq('api:/users/index->allow')
-			expect(sorted_rules[7].to_s).to eq('api:/users/new->allow')
-			expect(sorted_rules[8].to_s).to eq('api:/users/edit->allow')
+			expect(sorted_rules[1].to_s).to eq('api:/users/create->allow')
+			expect(sorted_rules[2].to_s).to eq('api:/users/delete->allow')
+			expect(sorted_rules[3].to_s).to eq('api:/users/edit->allow')
+			expect(sorted_rules[4].to_s).to eq('api:/users/index->allow')
+			expect(sorted_rules[5].to_s).to eq('api:/users/new->allow')
+			expect(sorted_rules[6].to_s).to eq('api:/users/rest->allow')
+			expect(sorted_rules[7].to_s).to eq('api:/users/show->allow')
+			expect(sorted_rules[8].to_s).to eq('api:/users/update->allow')
 			expect(sorted_rules[9].to_s).to eq('*:/users/create->allow')
-			expect(sorted_rules[10].to_s).to eq('*:/users/show->allow')
-			expect(sorted_rules[11].to_s).to eq('*:/users/update->allow')
-			expect(sorted_rules[12].to_s).to eq('*:/users/delete->allow')
-			expect(sorted_rules[13].to_s).to eq('*:/users/index->allow')
-			expect(sorted_rules[14].to_s).to eq('*:/users/new->allow')
-			expect(sorted_rules[15].to_s).to eq('*:/users/edit->allow')
+			expect(sorted_rules[10].to_s).to eq('*:/users/delete->allow')
+			expect(sorted_rules[11].to_s).to eq('*:/users/edit->allow')
+			expect(sorted_rules[12].to_s).to eq('*:/users/index->allow')
+			expect(sorted_rules[13].to_s).to eq('*:/users/new->allow')
+			expect(sorted_rules[14].to_s).to eq('*:/users/show->allow')
+			expect(sorted_rules[15].to_s).to eq('*:/users/update->allow')
 			expect(sorted_rules[16].to_s).to eq('*:/users/work->allow')
 			expect(sorted_rules[17].to_s).to eq('*:/*/see->allow')
 		end

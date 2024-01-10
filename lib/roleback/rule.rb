@@ -50,13 +50,13 @@ module Roleback
 		# scope_weight = 100
 		# resource_weight = 10
 		# outcome_weight = 1
-		# scope_value = 0 if scope == ANY, 1 otherwise
-		# resource_value = 0 if resource == ANY, 1 otherwise
-		# outcome_value = 0 if outcome == ALLOW, 1 otherwise
+		# scope_value = 1 if scope == ANY, 2 otherwise
+		# resource_value = 1 if resource == ANY, 2 otherwise
+		# outcome_value = 1 if outcome == ALLOW, 2 otherwise
 		def numerical_value
-			scope_value = @scope == ::Roleback::ANY ? 0 : 1
-			resource_value = @resource == ::Roleback::ANY ? 0 : 1
-			outcome_value = @outcome == ::Roleback::ALLOW ? 0 : 1
+			scope_value = @scope == ::Roleback::ANY ? 1 : 2
+			resource_value = @resource == ::Roleback::ANY ? 1 : 2
+			outcome_value = @outcome == ::Roleback::ALLOW ? 1 : 2
 
 			(scope_value * 100) + (resource_value * 10) + (outcome_value * 1)
 		end

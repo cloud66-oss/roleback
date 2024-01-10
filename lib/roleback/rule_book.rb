@@ -96,7 +96,15 @@ module Roleback
 
 			# sort the rules
 			rules.sort! do |a, b|
-				b.numerical_value <=> a.numerical_value
+				an = a.numerical_value
+				bn = b.numerical_value
+
+				# if the numerical values are the same, sort by key, otherwise sort by numerical value
+				if an == bn
+					a.key <=> b.key
+				else
+					bn <=> an
+				end
 			end
 		end
 
