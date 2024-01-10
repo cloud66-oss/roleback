@@ -176,7 +176,7 @@ RSpec.describe Roleback::RuleBook do
 
 	describe '#sort' do
 		it 'sorts rules based on the rules numerical values and outcome' do
-			Roleback.define do |config|
+			config = Roleback.define do |config|
 				role :admin do
 					resource :users do
 						can :work
@@ -193,7 +193,7 @@ RSpec.describe Roleback::RuleBook do
 				end
 			end
 
-			rules = Roleback.configuration.roles[:admin].rules
+			rules = config.roles[:admin].rules
 			sorted_rules = rules.sort
 
 			# make sure rules and sorted_rules are not the same object
