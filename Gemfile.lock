@@ -6,14 +6,19 @@ PATH
 GEM
   remote: https://rubygems.org/
   specs:
-    debug (1.8.0)
-      irb (>= 1.5.0)
-      reline (>= 0.3.1)
+    debug (1.9.1)
+      irb (~> 1.10)
+      reline (>= 0.3.8)
     diff-lcs (1.5.0)
     io-console (0.7.1)
-    irb (1.6.3)
-      reline (>= 0.3.0)
+    irb (1.11.1)
+      rdoc
+      reline (>= 0.4.2)
+    psych (5.1.2)
+      stringio
     rake (10.5.0)
+    rdoc (6.6.2)
+      psych (>= 4.0.0)
     reline (0.4.2)
       io-console (~> 0.5)
     rspec (3.12.0)
@@ -29,16 +34,18 @@ GEM
       diff-lcs (>= 1.2.0, < 2.0)
       rspec-support (~> 3.12.0)
     rspec-support (3.12.1)
+    stringio (3.1.0)
 
 PLATFORMS
+  arm64-darwin-23
   ruby
 
 DEPENDENCIES
-  bundler (~> 1.17)
+  bundler (~> 2.5)
   debug
   rake (~> 10.0)
   roleback!
   rspec (~> 3.0)
 
 BUNDLED WITH
-   1.17.2
+   2.5.4
