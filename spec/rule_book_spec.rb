@@ -204,7 +204,7 @@ RSpec.describe Roleback::RuleBook do
 			# make sure the rules are sorted correctly based on the following values:
 			expect(sorted_rules[0].to_s).to eq('api:/users/work->deny')
 			expect(sorted_rules[1].to_s).to eq('api:/users/create->allow')
-			expect(sorted_rules[2].to_s).to eq('api:/users/delete->allow')
+			expect(sorted_rules[2].to_s).to eq('api:/users/destroy->allow')
 			expect(sorted_rules[3].to_s).to eq('api:/users/edit->allow')
 			expect(sorted_rules[4].to_s).to eq('api:/users/index->allow')
 			expect(sorted_rules[5].to_s).to eq('api:/users/new->allow')
@@ -212,7 +212,7 @@ RSpec.describe Roleback::RuleBook do
 			expect(sorted_rules[7].to_s).to eq('api:/users/show->allow')
 			expect(sorted_rules[8].to_s).to eq('api:/users/update->allow')
 			expect(sorted_rules[9].to_s).to eq('*:/users/create->allow')
-			expect(sorted_rules[10].to_s).to eq('*:/users/delete->allow')
+			expect(sorted_rules[10].to_s).to eq('*:/users/destroy->allow')
 			expect(sorted_rules[11].to_s).to eq('*:/users/edit->allow')
 			expect(sorted_rules[12].to_s).to eq('*:/users/index->allow')
 			expect(sorted_rules[13].to_s).to eq('*:/users/new->allow')

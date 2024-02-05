@@ -3,7 +3,7 @@ module Roleback
 		class Resource < ::Roleback::Definitions::RuleBased
 			attr_reader :name
 
-			DEFAULT_ACTION_PATH = [:create, :show, :update, :delete, :index, :new, :edit]
+			DEFAULT_ACTION_PATH = [:create, :show, :update, :destroy, :index, :new, :edit]
 
 			def initialize(name, role:, scope: ::Roleback::ANY, options: {}, &block)
 				@name = name

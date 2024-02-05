@@ -56,7 +56,7 @@ end
 # config/initializers/roles.rb
 Roleback.define do
   role :admin do
-    resource :post, only: [:read, :create, :update, :delete] do
+    resource :post, only: [:read, :create, :update, :destroy] do
       can :read
     end
   end
@@ -108,7 +108,7 @@ Roleback.define do
   end
 
   role :editor, inherits_from: :admin do
-    cannot :delete
+    cannot :destroy
   end
 end
 ```
@@ -127,7 +127,7 @@ Roleback.define do
   end
 
   role :editor, inherits_from: [:admin, :author] do
-    cannot :delete
+    cannot :destroy
   end
 end
 ```
@@ -179,7 +179,7 @@ Roleback doesn't care how you check permissions, but it does provide a simple AP
 
 ```ruby
 Roleback.can?(:admin, resource: :post, action: :read) # => true
-Roleback.can?(:editor, resource: :post, :delete) # => false
+Roleback.can?(:editor, resource: :post, action: :destroy) # => false
 ```
 
 After the definition of roles is finished (`Roleback.define`), all each role, ends up with the collection of all rules it has plus all the rules it has inherited from other roles. These rules are used to check for permissions. When the `can?` method is called with `scope`, `resource` and `action`, `can?` will return the outcome of the most specific rule that matches the given `scope`, `resource` and `action`. If no rule matches, `can?` will return `false`. If you have both `can` and `cannot` rules for a check, `cannot` will take precedence (deny over grant).
@@ -190,7 +190,7 @@ If you have a `User` class, Roleback will automatically, add a `can?` method to 
 ```ruby
 user = User.find(1) # user.roles => [:admin]
 user.can?(resource: :post, action: :read) # => true
-user.can?(resource: :post, :delete) # => false
+user.can?(resource: :post, action: :destroy) # => false
 ```
 
 Your `User` class has to have a method called `roles` that returns an array of role names as symbols.
