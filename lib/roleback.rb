@@ -1,6 +1,7 @@
 require "roleback/version"
 require 'roleback/definitions/load'
-Dir["#{File.dirname(__FILE__)}/roleback/**/*.rb"].each { |f| load(f) }
+# use require instead of load to avoid re-executing already-loaded files
+Dir["#{File.dirname(__FILE__)}/roleback/**/*.rb"].each { |f| require(f) }
 
 module Roleback
 	class Error < StandardError; end
